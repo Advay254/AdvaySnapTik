@@ -9,19 +9,30 @@ self.addEventListener('activate', e => e.waitUntil(Promise.all([
   self.clients.claim(),
 ])));
 
+// Never intercept ad scripts or third-party resources
+const BYPASS = ['millionairelucidlytransmitted.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
+
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
+  // Let ad CDN and external requests pass through untouched
+  if (BYPASS.some(d => u.hostname.includes(d))) return;
+  if (u.origin !== self.location.origin) return;
   if (u.pathname === '/share-target') { e.respondWith(shareHandler(u)); return; }
   if (u.pathname.startsWith('/api/')) {
     e.respondWith(fetch(e.request).catch(() => new Response(JSON.stringify({ error: 'Offline.' }), { status:503, headers:{'Content-Type':'application/json'} })));
     return;
   }
+  // Navigation: always network-first, never serve stale HTML (breaks ad injection)
   if (e.request.mode === 'navigate') {
-    e.respondWith(fetch(e.request).then(r => { if (r.ok) caches.open(CACHE).then(c => c.put(e.request, r.clone())); return r; })
+    e.respondWith(fetch(e.request)
       .catch(async () => await caches.match(e.request) || caches.match('/offline.html')));
     return;
   }
-  e.respondWith(caches.match(e.request).then(c => c || fetch(e.request).then(r => { if (r.ok && r.type==='basic') caches.open(CACHE).then(ch => ch.put(e.request, r.clone())); return r; })));
+  // Static assets: cache-first
+  e.respondWith(caches.match(e.request).then(c => c || fetch(e.request).then(r => {
+    if (r.ok && r.type === 'basic') caches.open(CACHE).then(ch => ch.put(e.request, r.clone()));
+    return r;
+  })));
 });
 
 // ── Background Sync ───────────────────────────────────────────────────────────
