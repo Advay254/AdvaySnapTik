@@ -82,14 +82,21 @@ app.get('/sitemap.xml', (_req, res) => {
   }\n</urlset>`);
 });
 
+// ── /AdvaySnapTik.apk — Android app download ─────────────────────────────────
+app.get('/AdvaySnapTik.apk', (_req, res) => {
+  res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+  res.setHeader('Content-Disposition', 'attachment; filename="AdvaySnapTik.apk"');
+  res.sendFile(join(__dirname, 'public/AdvaySnapTik.apk'));
+});
+
 // ── /.well-known/assetlinks.json — TWA / Play Store ──────────────────────────
 app.get('/.well-known/assetlinks.json', (_req, res) => {
   res.json([{
     relation: ['delegate_permission/common.handle_all_urls'],
     target: {
       namespace: 'android_app',
-      package_name: 'com.advay.advaysnaptik.twa',
-      sha256_cert_fingerprints: ['REPLACE_WITH_SHA256_AFTER_PLAY_STORE_LISTING'],
+      package_name: 'com.onrender.advaysnaptik.twa',
+      sha256_cert_fingerprints: ['84:BE:1E:CE:0C:94:E1:27:FA:AC:DF:57:2D:CC:92:90:77:D3:11:5F:CE:0D:48:45:F8:E2:76:DD:8F:09:B6:2C'],
     },
   }]);
 });
