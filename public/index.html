@@ -235,10 +235,6 @@ footer{position:relative;z-index:1;border-top:1px solid var(--bo);
 }
 </style>
 
-<!-- Social bar ad — loaded after styles, same as PinSaver -->
-<script async src="https://millionairelucidlytransmitted.com/0a/72/51/0a725128b06d958e4ece2e59d7974488.js"></script>
-<!-- Popunder ad — loaded after styles, same as PinSaver -->
-<script async src="https://millionairelucidlytransmitted.com/97/bd/aa/97bdaa15372aa5f153635ca541b705ee.js"></script>
 </head>
 <body>
 <div class="mesh" aria-hidden="true"></div>
@@ -477,5 +473,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--bo);
     }
   })();
 </script>
+<!-- Social bar — end of body so DOM exists when script runs, fixes render race -->
+<script async src="https://millionairelucidlytransmitted.com/0a/72/51/0a725128b06d958e4ece2e59d7974488.js"></script>
 </body>
 </html>
