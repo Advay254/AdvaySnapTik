@@ -1,7 +1,6 @@
 // server.js — AdvaySnapTik v1.0.0
 import 'dotenv/config';
 import express       from 'express';
-import helmet        from 'helmet';
 import compression   from 'compression';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -23,29 +22,14 @@ const AD_SMART  = process.env.AD_SMARTLINK_URL || '';
 const AD_BANNER = process.env.AD_BANNER_URL    || '';
 const AD_POP    = process.env.AD_POPUNDER_URL  || '';
 
-// ── Security headers ──────────────────────────────────────────────────────────
-// Render (and most hosts) sit behind a reverse proxy — required for rate limiter
+// ── Trust proxy + minimal headers (no helmet — keeps ads working) ────────────
 app.set('trust proxy', 1);
-
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc:  ["'self'", "'unsafe-inline'", "'unsafe-eval'",
-                   'https://fonts.googleapis.com',
-                   'https://millionairelucidlytransmitted.com'],
-      styleSrc:   ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      fontSrc:    ["'self'", 'https://fonts.gstatic.com', 'data:'],
-      imgSrc:     ["'self'", 'data:', 'blob:', 'https:'],
-      mediaSrc:   ["'self'", 'blob:', 'https:'],
-      frameSrc:   ["'self'", 'https://millionairelucidlytransmitted.com', 'https:'],
-      connectSrc: ["'self'", 'https:', 'wss:'],
-      workerSrc:  ["'self'", 'blob:'],
-      childSrc:   ["'self'", 'blob:', 'https:'],
-    },
-  },
-  crossOriginEmbedderPolicy: false,
-}));
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
 
 app.use(compression());
 app.use(express.json({ limit: '10kb' }));
