@@ -24,6 +24,9 @@ const AD_BANNER = process.env.AD_BANNER_URL    || '';
 const AD_POP    = process.env.AD_POPUNDER_URL  || '';
 
 // ── Security headers ──────────────────────────────────────────────────────────
+// Render (and most hosts) sit behind a reverse proxy — required for rate limiter
+app.set('trust proxy', 1);
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -122,3 +125,4 @@ app.use((err, _req, res, _next) => {
 app.listen(PORT, '0.0.0.0', () =>
   console.log(`✅  AdvaySnapTik → http://localhost:${PORT}`)
 );
+      
