@@ -31,12 +31,17 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc:  ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', AD_CDN].filter(Boolean),
+      scriptSrc:  ["'self'", "'unsafe-inline'", "'unsafe-eval'",
+                   'https://fonts.googleapis.com',
+                   'https://millionairelucidlytransmitted.com'],
       styleSrc:   ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      fontSrc:    ["'self'", 'https://fonts.gstatic.com'],
-      imgSrc:     ["'self'", 'data:', 'https:'],
-      mediaSrc:   ["'self'", 'https:'],
-      connectSrc: ["'self'"],
+      fontSrc:    ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      imgSrc:     ["'self'", 'data:', 'blob:', 'https:'],
+      mediaSrc:   ["'self'", 'blob:', 'https:'],
+      frameSrc:   ["'self'", 'https://millionairelucidlytransmitted.com', 'https:'],
+      connectSrc: ["'self'", 'https:', 'wss:'],
+      workerSrc:  ["'self'", 'blob:'],
+      childSrc:   ["'self'", 'blob:', 'https:'],
     },
   },
   crossOriginEmbedderPolicy: false,
@@ -125,4 +130,3 @@ app.use((err, _req, res, _next) => {
 app.listen(PORT, '0.0.0.0', () =>
   console.log(`✅  AdvaySnapTik → http://localhost:${PORT}`)
 );
-      
