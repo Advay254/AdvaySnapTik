@@ -46,6 +46,8 @@
 
   // ── Ad helpers ────────────────────────────────────────────────────────────────
   const SMARTLINK = 'https://millionairelucidlytransmitted.com/a887cntvrw?key=60d7383632c2b38d2124d7e205af8a2e';
+  const POPUNDER  = 'https://millionairelucidlytransmitted.com/97/bd/aa/97bdaa15372aa5f153635ca541b705ee.js';
+
   function openAd(url) {
     if (!url) return;
     const a = document.createElement('a');
@@ -53,6 +55,17 @@
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
   }
   function fireSmartlink() { openAd(SMARTLINK); }
+
+  // Popunder: injected once per session on first real user gesture (go/download click).
+  // Attaching to a gesture avoids browser's no-gesture block. sessionStorage prevents
+  // repeat fires in the same tab session.
+  function firePopunderOnce() {
+    if (sessionStorage.getItem('pu-fired')) return;
+    sessionStorage.setItem('pu-fired', '1');
+    const s = document.createElement('script');
+    s.src = POPUNDER; s.async = true;
+    document.body.appendChild(s);
+  }
 
   // ── Paste ─────────────────────────────────────────────────────────────────────
   $('btn-paste').addEventListener('click', async () => {
@@ -68,7 +81,8 @@
     const url = $('uin').value.trim();
     if (!url) { showErr('Please paste a TikTok URL first.'); return; }
     setLoad(true); clearErr(); hideRes();
-    fireSmartlink(); // user has clear intent — fire smartlink on every Get tap
+    firePopunderOnce(); // popunder fires once per session on first real user action
+    fireSmartlink();    // user has clear intent — fire smartlink on every Get tap
     try {
       const r = await fetch('/api/info?url=' + encodeURIComponent(url));
       const j = await r.json();
@@ -130,14 +144,13 @@
   $('res').addEventListener('click', e => {
     const btn = e.target.closest('.sbtn');
     if (btn) {
-      window.open('/wait.html', '_blank');
+      fireSmartlink(); // gesture slot → smartlink; the <a href download> handles the file
       playNotifSound();
-      // href download on the <a> element fires natively — no extra JS needed
     }
 
     const all = e.target.closest('#dl-all-slides');
     if (all && data?.images?.length) {
-      window.open('/wait.html', '_blank');
+      fireSmartlink();
       playNotifSound();
       // Click each slide link one by one — direct href approach
       const links = $('slidecontent').querySelectorAll('.sbtn');
@@ -158,10 +171,10 @@
   $('dl-video').addEventListener('click', () => dlFile('video'));
   $('dl-audio').addEventListener('click', () => dlFile('audio'));
 
-  // ── Decoy buttons — fire smartlink (same pattern as PinSaver) ────────────────
+  // ── Decoy buttons — fire smartlink only (one popup per gesture, second would be blocked) ──
   ['decoy-hd', 'decoy-4k', 'decoy-mp3'].forEach(id => {
     const el = $(id);
-    if (el) el.addEventListener('click', () => { fireSmartlink(); window.open('/wait.html', '_blank'); });
+    if (el) el.addEventListener('click', () => { fireSmartlink(); });
   });
 
   // ── Notification sound (Web Audio API — no file permission needed) ───────────
@@ -187,8 +200,9 @@
 
   function dlFile(type, idx = 0) {
     if (!data) return;
-    // Open wait screen — ONE popup only (mobile allows this reliably)
-    window.open('/wait.html', '_blank');
+    // Smartlink opens in new tab using the gesture slot — user gets their download,
+    // we get our link clicked. triggerDownload uses a hidden <a> click (no popup needed).
+    fireSmartlink();
     triggerDownload(type, idx);
     playNotifSound();
     // Push notification if granted
