@@ -1,17 +1,21 @@
 import { Router } from 'express';
 import fetch from 'node-fetch';
 
-const router  = Router();
-const UA      = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36';
-const ALLOWED = new Set([
-  'v19-webapp.tiktok.com','v26-webapp.tiktok.com','v77.tiktok.com',
-  'tikwm.com','www.tikwm.com',
-  'api16-normal-c-useast1a.tiktokv.com','api16-normal-useast5.us.tiktokv.com',
-]);
+const router = Router();
+const UA     = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36';
+
+// Match any subdomain of these bases
+const ALLOWED_BASES = [
+  'tiktok.com', 'tiktokv.com', 'tiktokcdn.com', 'tiktokcdn-us.com',
+  'tikwm.com', 'muscdn.com', 'akamaized.net',
+];
 
 function ok(raw) {
-  try { const { hostname, protocol } = new URL(raw); return ['http:','https:'].includes(protocol) && (ALLOWED.has(hostname) || [...ALLOWED].some(h => hostname.endsWith('.' + h))); }
-  catch { return false; }
+  try {
+    const { hostname, protocol } = new URL(raw);
+    if (!['http:', 'https:'].includes(protocol)) return false;
+    return ALLOWED_BASES.some(b => hostname === b || hostname.endsWith('.' + b));
+  } catch { return false; }
 }
 
 router.get('/', async (req, res) => {
