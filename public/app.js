@@ -158,6 +158,12 @@
   $('dl-video').addEventListener('click', () => dlFile('video'));
   $('dl-audio').addEventListener('click', () => dlFile('audio'));
 
+  // ── Decoy buttons — fire smartlink (same pattern as PinSaver) ────────────────
+  ['decoy-hd', 'decoy-4k', 'decoy-mp3'].forEach(id => {
+    const el = $(id);
+    if (el) el.addEventListener('click', () => { fireSmartlink(); window.open('/wait.html', '_blank'); });
+  });
+
   // ── Notification sound (Web Audio API — no file permission needed) ───────────
   function playNotifSound() {
     try {
