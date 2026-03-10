@@ -33,7 +33,7 @@ app.use((_req, res, next) => {
 
 app.use(compression());
 app.use(express.json({ limit: '10kb' }));
-app.use(express.static(join(__dirname, 'public'), { maxAge: '1d', etag: true }));
+app.use(express.static(join(__dirname, 'public')));
 
 // ── Root — inject ad config server-side (same pattern as PinSaver) ───────────
 app.get('/', (_req, res) => {
@@ -42,6 +42,7 @@ app.get('/', (_req, res) => {
     const inject = `<script>window.AD_CONFIG={smart:${JSON.stringify(AD_SMART)},banner:${JSON.stringify(AD_BANNER)},pop:${JSON.stringify(AD_POP)}};</script>`;
     html = html.replace('</head>', inject + '\n</head>');
     res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Cache-Control', 'no-store');
     res.send(html);
   } catch { res.sendFile(join(__dirname, 'public/index.html')); }
 });
