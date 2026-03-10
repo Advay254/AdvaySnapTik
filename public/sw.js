@@ -6,7 +6,7 @@
 //   Ad scripts  → never intercepted (external origin)
 //   On deploy   → auto-activates and reloads all open tabs immediately
 
-const CACHE  = 'ast-v5';
+const CACHE  = 'ast-v6';
 const ASSETS = ['/app.js', '/style.css', '/manifest.json'];
 
 // ── Install: cache static assets only — NOT index.html ───────────────────────
