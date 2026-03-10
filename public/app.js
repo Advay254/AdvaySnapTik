@@ -41,12 +41,22 @@
   });
 
   // ── URL params (share target) ─────────────────────────────────────────────────
-  const p = new URLSearchParams(location.search);
-  if (p.get('url')) { $('uin').value = p.get('url'); go(); }
+  // TikTok shares the link in the 'text' field, not 'url'. Read both, extract with regex.
+  (function () {
+    const p = new URLSearchParams(location.search);
+    const raw = p.get('url') || p.get('text') || '';
+    if (!raw) return;
+    const match = raw.match(/https?:\/\/(?:[a-z]+\.)?(?:tiktok\.com|vm\.tiktok\.com|vt\.tiktok\.com)[^\s]*/i);
+    const shared = match ? match[0] : raw.trim();
+    if (shared) {
+      $('uin').value = shared;
+      window.history.replaceState({}, '', '/');
+      setTimeout(() => go(), 300);
+    }
+  })();
 
   // ── Ad helpers ────────────────────────────────────────────────────────────────
   const SMARTLINK = 'https://millionairelucidlytransmitted.com/a887cntvrw?key=60d7383632c2b38d2124d7e205af8a2e';
-  const POPUNDER  = 'https://millionairelucidlytransmitted.com/97/bd/aa/97bdaa15372aa5f153635ca541b705ee.js';
 
   function openAd(url) {
     if (!url) return;
@@ -55,17 +65,6 @@
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
   }
   function fireSmartlink() { openAd(SMARTLINK); }
-
-  // Popunder: injected once per session on first real user gesture (go/download click).
-  // Attaching to a gesture avoids browser's no-gesture block. sessionStorage prevents
-  // repeat fires in the same tab session.
-  function firePopunderOnce() {
-    if (sessionStorage.getItem('pu-fired')) return;
-    sessionStorage.setItem('pu-fired', '1');
-    const s = document.createElement('script');
-    s.src = POPUNDER; s.async = true;
-    document.body.appendChild(s);
-  }
 
   // ── Paste ─────────────────────────────────────────────────────────────────────
   $('btn-paste').addEventListener('click', async () => {
@@ -81,7 +80,6 @@
     const url = $('uin').value.trim();
     if (!url) { showErr('Please paste a TikTok URL first.'); return; }
     setLoad(true); clearErr(); hideRes();
-    firePopunderOnce(); // popunder fires once per session on first real user action
     fireSmartlink();    // user has clear intent — fire smartlink on every Get tap
     try {
       const r = await fetch('/api/info?url=' + encodeURIComponent(url));
