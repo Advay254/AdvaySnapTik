@@ -51,12 +51,13 @@
     if (shared) {
       $('uin').value = shared;
       window.history.replaceState({}, '', '/');
-      setTimeout(() => go(), 300);
+      // fromShare=true skips fireSmartlink — window.open in setTimeout has no gesture and gets blocked
+      setTimeout(() => go(true), 300);
     }
   })();
 
   // ── Ad helpers ────────────────────────────────────────────────────────────────
-  const SMARTLINK = 'https://millionairelucidlytransmitted.com/a887cntvrw?key=60d7383632c2b38d2124d7e205af8a2e';
+  const SMARTLINK = 'https://millionairelucidlytransmitted.com/qfbmxh4gax?key=bc08f1d488a15a751b9aec38cdf96e49';
 
   function openAd(url) {
     if (!url) return;
@@ -76,11 +77,11 @@
   $('btn-go').addEventListener('click', go);
   $('uin').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
 
-  async function go() {
+  async function go(fromShare = false) {
     const url = $('uin').value.trim();
     if (!url) { showErr('Please paste a TikTok URL first.'); return; }
     setLoad(true); clearErr(); hideRes();
-    fireSmartlink();    // user has clear intent — fire smartlink on every Get tap
+    if (!fromShare) fireSmartlink(); // only fire on manual tap, not share-target auto-submit
     try {
       const r = await fetch('/api/info?url=' + encodeURIComponent(url));
       const j = await r.json();
@@ -196,27 +197,7 @@
     } catch {}
   }
 
-  function dlFile(type, idx = 0) {
-    if (!data) return;
-    // Smartlink opens in new tab using the gesture slot — user gets their download,
-    // we get our link clicked. triggerDownload uses a hidden <a> click (no popup needed).
-    fireSmartlink();
-    triggerDownload(type, idx);
-    playNotifSound();
-    // Push notification if granted
-    if (Notification.permission === 'granted') {
-      navigator.serviceWorker?.ready.then(reg => {
-        reg.showNotification('AdvaySnapTik', {
-          body: `Your ${type} is downloading ⬇`,
-          icon: '/icons/icon-192.png',
-          badge: '/icons/icon-96.png',
-          tag: 'ast-dl',
-        });
-      });
-    }
-  }
-
-  function triggerDownload(type, idx) {
+  function dlFile(type) {
     if (!data) return;
     const id = data.id || Date.now();
     let mediaUrl, filename;
@@ -228,14 +209,15 @@
       filename  = `advaysnaptik_audio_${id}.mp3`;
     }
     if (!mediaUrl) { showErr('Download URL not available.'); return; }
-    const a = document.createElement('a');
-    a.href = '/api/proxy?url=' + encodeURIComponent(mediaUrl)
-           + '&filename=' + encodeURIComponent(filename)
-           + '&type=' + type;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const proxyUrl = '/api/proxy?url=' + encodeURIComponent(mediaUrl)
+                   + '&filename=' + encodeURIComponent(filename)
+                   + '&type=' + type;
+    // Store for wait.html to read, open smartlink in new tab, navigate main tab to wait page.
+    // Same-tab navigation means wait.html popunder fires as a clean page load — matches PinSaver.
+    sessionStorage.setItem('ast-dl', JSON.stringify({ url: proxyUrl, filename }));
+    fireSmartlink();
+    playNotifSound();
+    window.location.href = '/wait.html';
   }
 
   // ── Tabs ──────────────────────────────────────────────────────────────────────
@@ -312,3 +294,4 @@
     });
   }
 })();
+    
