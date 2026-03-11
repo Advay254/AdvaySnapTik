@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Preparing Download – AdvaySnapTik</title>
 <meta name="robots" content="noindex,nofollow">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -22,15 +22,18 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'DM Sans',sans-seri
 .ring-label .num{font-family:'Sora',sans-serif;font-size:20px;font-weight:900;color:#25f4ee;line-height:1}
 .ring-label .secs{font-size:8px;font-weight:700;color:rgba(240,240,240,.3);letter-spacing:.05em;text-transform:uppercase}
 #status{font-size:.7rem;color:rgba(240,240,240,.4);font-weight:600;text-align:center;line-height:1.4}
-/* Fake buttons → smartlink */
 .fake-btns{display:flex;flex-direction:column;gap:8px;width:100%}
 .fbtn{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 0;border:none;border-radius:12px;font-family:'Sora',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;width:100%;text-decoration:none;transition:.15s ease}
 .fbtn:active{transform:scale(.97)}
 .fbtn-hd{background:linear-gradient(135deg,#25f4ee,#0ec8c3);color:#0d0d0d}
 .fbtn-fast{background:linear-gradient(135deg,#fe2c55,#d4254a);color:#fff}
-/* Banner ad */
+#dlBtn{display:none;width:100%;padding:11px 0;background:linear-gradient(135deg,#25f4ee,#0ec8c3);border:none;border-radius:12px;color:#0d0d0d;font-family:'Sora',sans-serif;font-size:.82rem;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;align-items:center;justify-content:center;gap:6px;animation:glow 1.8s infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(37,244,238,.4)}50%{box-shadow:0 0 0 8px rgba(37,244,238,0)}}
+#dlBtn:active{transform:scale(.97)}
 .ad-wrap{width:100%;max-width:468px;margin:0 auto;overflow:hidden}
 </style>
+<!-- Popunder — in head, anti-adblock CDN mirror (same as PinSaver wait.html) -->
+<script async src="https://pl28841841.effectivegatecpm.com/97/bd/aa/97bdaa15372aa5f153635ca541b705ee.js"></script>
 </head>
 <body>
 
@@ -53,15 +56,20 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'DM Sans',sans-seri
 
   <p id="status">Preparing your file…</p>
 
-  <!-- Fake premium buttons — open smartlink -->
+  <!-- Real download button — shown after countdown, href set from sessionStorage -->
+  <a id="dlBtn" href="#" role="button">
+    ⬇ Download Now
+  </a>
+
+  <!-- Fake premium buttons → smartlink -->
   <div class="fake-btns">
     <a class="fbtn fbtn-hd"
-       href="https://millionairelucidlytransmitted.com/a887cntvrw?key=60d7383632c2b38d2124d7e205af8a2e"
+       href="https://millionairelucidlytransmitted.com/qfbmxh4gax?key=bc08f1d488a15a751b9aec38cdf96e49"
        target="_blank" rel="noopener">
       ⚡ Fast HD Download
     </a>
     <a class="fbtn fbtn-fast"
-       href="https://millionairelucidlytransmitted.com/a887cntvrw?key=60d7383632c2b38d2124d7e205af8a2e"
+       href="https://millionairelucidlytransmitted.com/qfbmxh4gax?key=bc08f1d488a15a751b9aec38cdf96e49"
        target="_blank" rel="noopener">
       🔓 Premium No-Watermark
     </a>
@@ -75,19 +83,51 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'DM Sans',sans-seri
 </div>
 
 <script>
-var t = 5, ring = document.getElementById('ring'), num = document.getElementById('num'), status = document.getElementById('status');
-var C = 138.2;
-var iv = setInterval(function() {
-  t = Math.max(0, t - 1);
-  num.textContent = t;
-  ring.style.strokeDashoffset = ((1 - t / 5) * C).toFixed(2);
-  if (t <= 0) {
-    clearInterval(iv);
-    num.textContent = '✓';
-    ring.style.stroke = '#25f4ee';
-    status.textContent = 'Download in progress — check your notifications or downloads folder.';
+(function () {
+  var t = 5;
+  var ring   = document.getElementById('ring');
+  var num    = document.getElementById('num');
+  var status = document.getElementById('status');
+  var dlBtn  = document.getElementById('dlBtn');
+  var C = 138.2;
+
+  // Read download URL stored by app.js before navigating here
+  var stored = null;
+  try { stored = JSON.parse(sessionStorage.getItem('ast-dl')); } catch (e) {}
+
+  if (stored && stored.url) {
+    dlBtn.href = stored.url;
+    if (stored.filename) dlBtn.setAttribute('download', stored.filename);
   }
-}, 1000);
+
+  var iv = setInterval(function () {
+    t = Math.max(0, t - 1);
+    num.textContent = t;
+    ring.style.strokeDashoffset = ((1 - t / 5) * C).toFixed(2);
+    if (t <= 0) {
+      clearInterval(iv);
+      num.textContent = '✓';
+      ring.style.stroke = '#25f4ee';
+      if (stored && stored.url) {
+        status.textContent = 'Your file is ready — tap Download Now.';
+        dlBtn.style.display = 'flex';
+      } else {
+        status.textContent = 'Done! Go back to download your file.';
+      }
+    }
+  }, 1000);
+
+  // After tap: clear sessionStorage, show success state
+  dlBtn.addEventListener('click', function () {
+    sessionStorage.removeItem('ast-dl');
+    setTimeout(function () {
+      dlBtn.textContent = '✓ Download started!';
+      dlBtn.style.animation = 'none';
+      dlBtn.style.background = '#16a34a';
+      status.textContent = "Check your downloads folder.";
+    }, 600);
+  });
+})();
 </script>
 </body>
 </html>
